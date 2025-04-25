@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trivia K-Pop</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .question-box {
+      background: magenta;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+    .welcome {
+      color: white;
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .question {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    .option {
+      background: #e0e0e0;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .option.correct {
+      background-color: #c8e6c9;
+    }
+    .option.incorrect {
+      background-color: #ffcdd2;
+    }
+    #nextBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: #2196f3;
+      color: white;
+      cursor: pointer;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    #nextBtn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #result {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+    #counter {
+      color: white;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 18px;
+    }
+    .korean-toon {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .korean-toon img {
+      width: 80px;
+      height: auto;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="question-box animate__animated animate__fadeIn">
+    <div class="welcome">¡Bienvenid@ a la Trivia de K-pop! Responde las siguientes preguntas y demuestra tus conocimientos.</div>
+    <div class="korean-toon">
+      <img src="https://www.clipartkey.com/mpngs/m/1-14077_pororo-the-little-penguin-png.png" alt="Pororo" title="Pororo el pingüino">
+      <img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Larva_characters.png" alt="Larva" title="Larva">
+    </div>
+    <div id="counter">Correctas: 0 | Incorrectas: 0</div>
+    <div id="question" class="question"></div>
+    <div id="options"></div>
+    <button id="nextBtn">Siguiente</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const quiz = [
+      {
+        question: "¿Cuál es el grupo de K-pop que interpreta la canción 'Dynamite'?",
+        options: ["EXO", "BTS", "BLACKPINK", "TWICE"],
+        answer: 1
+      },
+      {
+        question: "¿Qué grupo femenino lanzó la canción 'DDU-DU DDU-DU'?",
+        options: ["ITZY", "BLACKPINK", "Red Velvet", "MAMAMOO"],
+        answer: 1
+      },
+      {
+        question: "¿Qué significa K en K-pop?",
+        options: ["Karaoke", "Korean", "Kinetic", "K-popular"],
+        answer: 1
+      },
+      {
+        question: "¿Cuál de estos idols es parte de EXO?",
+        options: ["Taemin", "Kai", "RM", "Suga"],
+        answer: 1
+      },
+      {
+        question: "¿Qué grupo lanzó la canción 'Love Shot'?",
+        options: ["EXO", "BTS", "SEVENTEEN", "NCT"],
+        answer: 0
+      },
+      {
+        question: "¿Quién es el líder de BTS?",
+        options: ["Jin", "Jungkook", "RM", "V"],
+        answer: 2
+      },
+      {
+        question: "¿Qué grupo es conocido por la canción 'CHEER UP'?",
+        options: ["TWICE", "GFRIEND", "ITZY", "AOA"],
+        answer: 0
+      },
+      {
+        question: "¿Cuál es el nombre del fandom de BLACKPINK?",
+        options: ["BLINK", "ARMY", "ONCE", "STAY"],
+        answer: 0
+      },
+      {
+        question: "¿Qué integrante de BTS es conocido como 'Golden Maknae'?",
+        options: ["V", "Jimin", "J-Hope", "Jungkook"],
+        answer: 3
+      },
+      {
+        question: "¿Qué grupo debutó con la canción 'Boombayah'?",
+        options: ["BLACKPINK", "ITZY", "TWICE", "(G)I-DLE"],
+        answer: 0
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let incorrect = 0;
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const resultEl = document.getElementById("result");
+    const counterEl = document.getElementById("counter");
+
+    function updateCounter() {
+      counterEl.textContent = `Correctas: ${score} | Incorrectas: ${incorrect}`;
+    }
+
+    function loadQuestion() {
+      nextBtn.classList.remove("active");
+      const q = quiz[current];
+      questionEl.textContent = q.question;
+      optionsEl.innerHTML = "";
+      q.options.forEach((opt, idx) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.textContent = opt;
+        div.onclick = () => selectOption(idx, div);
+        optionsEl.appendChild(div);
+      });
+    }
+
+    function selectOption(index, element) {
+      const options = document.querySelectorAll(".option");
+      options.forEach(opt => opt.onclick = null);
+      const correctIndex = quiz[current].answer;
+      if(index === correctIndex) {
+        element.classList.add("correct");
+        score++;
+      } else {
+        element.classList.add("incorrect");
+        options[correctIndex].classList.add("correct");
+        incorrect++;
+      }
+      updateCounter();
+      nextBtn.classList.add("active");
+    }
+
+    nextBtn.onclick = () => {
+      current++;
+      if(current < quiz.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    };
+
+    function showResult() {
+      questionEl.style.display = "none";
+      optionsEl.style.display = "none";
+      nextBtn.style.display = "none";
+      counterEl.style.display = "none";
+      let feedback = "";
+      if(score === 10) feedback = "¡Perfecto! ¡Eres un experto en K-pop!";
+      else if(score >= 7) feedback = "¡Muy bien! Sabes bastante de K-pop.";
+      else if(score >= 4) feedback = "¡Bien hecho! Aunque podrías aprender más.";
+      else feedback = "Sigue practicando, ¡seguro mejorarás!";
+      resultEl.innerHTML = `Puntaje final: ${score}/10<br>${feedback}`;
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
